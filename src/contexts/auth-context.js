@@ -70,6 +70,7 @@ export const AuthProvider = (props) => {
     if (initialized.current) {
       return;
     }
+    console.log('initialize');
 
     initialized.current = true;
 
@@ -82,17 +83,23 @@ export const AuthProvider = (props) => {
     }
 
     if (isAuthenticated) {
-      const user = {
-        id: '5e86809283e28b96d2d38537',
-        avatar: '/assets/avatars/avatar-anika-visser.png',
-        name: 'Anika Visser',
-        email: 'anika.visser@devias.io'
-      };
-
-      dispatch({
-        type: HANDLERS.INITIALIZE,
-        payload: user
-      });
+      try {
+        let session = window.sessionStorage.getItem('session');
+        if (session) {
+          const sessionData = JSON.parse(session);
+          dispatch({
+            type: HANDLERS.INITIALIZE,
+            payload: sessionData.user
+          });
+          checkToken(sessionData.token);
+        } else {
+          dispatch({
+            type: HANDLERS.INITIALIZE
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
     } else {
       dispatch({
         type: HANDLERS.INITIALIZE
@@ -176,13 +183,10 @@ export const AuthProvider = (props) => {
     //     return;
     // }
 
-    console.log('check token', state);
-
     if (optionalToken) {
-        const config = { headers: { Authorization: `Bearer ${optionalToken}` } };
         const response = await getRequest({
             url: '/auth/permissions?is_debug=true',
-            config: config
+            token: optionalToken
         });
 
         if (response.error) {
@@ -193,6 +197,7 @@ export const AuthProvider = (props) => {
             console.log('response login', response);
             try {
               window.sessionStorage.setItem('authenticated', 'true');
+              window.sessionStorage.setItem('session', JSON.stringify({...response.data, token: optionalToken}));
             } catch (err) {
               console.error(err);
             }

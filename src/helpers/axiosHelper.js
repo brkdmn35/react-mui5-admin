@@ -52,7 +52,7 @@ export const getRequest = async (args) => {
     try {
 
         var myHeaders = new Headers();
-        myHeaders.append("Authorization", `Bearer ${localStorage.getItem('authToken')}`);
+        myHeaders.append("Authorization", `Bearer ${args.token}`);
 
         var requestOptions = {
             method: 'GET',
